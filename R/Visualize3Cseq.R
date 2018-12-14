@@ -1,6 +1,8 @@
 # TODO: These following functions are implemented for visualizing 3C-seq data.
 # Author: Supat Thongjuea
-# Contact:supat.thongjuea@ndcls.ox.ac.uk 
+# Contact:supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com 
+#####################################
+#####The functions below are completely migrated to BioC 3.9 on R 3.6
 #####################################
 plotOverviewInteractions<-function (obj,cutoff.qvalue=0.05){
 			
@@ -51,13 +53,13 @@ plotOverviewInteractions<-function (obj,cutoff.qvalue=0.05){
 				######check interactions############
 				expInteractions <-expInteractionRegions(obj)
 				
-				if(nrow(expInteractions) ==0){
+				if(length(expInteractions) ==0){
 					stop("There are no interaction regions found in r3Cseq object. Use 'getInteractions' function to get interaction regions")
 				}
 				
 				exp.filted <-expInteractions[expInteractions$q.value <=cutoff.qvalue,]
 				
-				if(nrow(exp.filted) ==0){
+				if(length(exp.filted) ==0){
 					stop("There are no interaction regions pass your qvalue cutoff.")
 				}
 				
@@ -141,13 +143,12 @@ plotOverviewInteractions<-function (obj,cutoff.qvalue=0.05){
 				i=0
 				for (chri in 1:nrow(chr.data)){
 					i=i+1
-					
-					if(as.character(chr.data$name[chri]) %in% names(exp.filted)){
-						exp.chr<-exp.filted[space(exp.filted)==as.character(chr.data$name[chri]),]
-						if(nrow(exp.chr) >0){
+					if(as.character(chr.data$name[chri]) %in% as.character(seqnames(exp.filted))){
+						exp.chr<-exp.filted[seqnames(exp.filted)==as.character(chr.data$name[chri]),]
+						if(length(exp.chr) >0){
 							rect(start(exp.chr),exp.coor$i[i], end(exp.chr), exp.coor$j[i], border=exp.chr$col)		
 						}
-						if(space(viewpoint)==as.character(chr.data$name[chri])){
+						if(as.character(seqnames(viewpoint))==as.character(chr.data$name[chri])){
 							polygon(c(start(viewpoint)-10e5,start(viewpoint),start(viewpoint)+10e5),
 								c(exp.coor$j[i]+1.5,exp.coor$j[i],exp.coor$j[i]+1.5), col="red")
 						}
@@ -161,13 +162,13 @@ plotOverviewInteractions<-function (obj,cutoff.qvalue=0.05){
 				expInteractions <-expInteractionRegions(obj)
 				contrInteractions <-contrInteractionRegions(obj)
 				
-				if(nrow(expInteractions) ==0){
+				if(length(expInteractions) ==0){
 					stop("There are no interaction regions found in r3Cseq object. Use 'getInteractions' function to get interaction regions")
 				}
 				
 				exp.filted <-expInteractions[expInteractions$q.value <=cutoff.qvalue,]
 				contr.filted <-contrInteractions[contrInteractions$q.value <=cutoff.qvalue,]
-				if(nrow(exp.filted) ==0){
+				if(length(exp.filted) ==0){
 					stop("There are no interaction regions pass your input parameters.")
 				}
 				
@@ -347,16 +348,16 @@ plotOverviewInteractions<-function (obj,cutoff.qvalue=0.05){
 				i=0
 				for (chri in 1:nrow(chr.data)){
 					i=i+1
-						if(as.character(chr.data$name[chri]) %in% names(exp.filted)){
-							exp.chr<-exp.filted[space(exp.filted)==as.character(chr.data$name[chri]),]
-							contr.chr<-contr.filted[space(contr.filted)==as.character(chr.data$name[chri]),]
-							if(nrow(exp.chr) >0){
+						if(as.character(chr.data$name[chri]) %in% as.character(seqnames(exp.filted))){  
+							exp.chr<-exp.filted[as.character(seqnames(exp.filted))==as.character(chr.data$name[chri]),] 
+							contr.chr<-contr.filted[as.character(seqnames(contr.filted))==as.character(chr.data$name[chri]),]
+							if(length(exp.chr) >0){
 								rect(start(exp.chr),exp.coor$i[i], end(exp.chr), exp.coor$j[i], border=exp.chr$col,lwd=1.5)		
 							}
-							if(nrow(contr.chr) >0){
+							if(length(contr.chr) >0){
 								rect(start(contr.chr), contr.coor$i[i], end(contr.chr), contr.coor$j[i], border=contr.chr$col,lwd=1.5)	
 							}
-							if(space(viewpoint)==as.character(chr.data$name[chri])){
+							if(as.character(seqnames(viewpoint))==as.character(chr.data$name[chri])){
 								polygon(c(start(viewpoint)-10e5,start(viewpoint),start(viewpoint)+10e5),
 								c(exp.coor$j[i]+1.5,exp.coor$j[i],exp.coor$j[i]+1.5), col="red")
 							}
@@ -375,7 +376,7 @@ plotInteractionsNearViewpoint<-function(obj,distance=5e5,log2fc_cutoff=1,yLim=0)
 			}
 			########Get viewpoint############
 			viewpoint <-getViewpoint(obj)
-			viewpoint.chr<-as.character(space(viewpoint))
+			viewpoint.chr<-as.character(seqnames(viewpoint))
 			########Get organism#############
 			orgName<-organismName(obj)
 			chr.size<-0
@@ -493,7 +494,7 @@ plotInteractionsNearViewpoint<-function(obj,distance=5e5,log2fc_cutoff=1,yLim=0)
 				legend("topleft",legend = "Restriction Fragments",fill="blue", cex=0.55,bty="n")
 				abline(v=start(viewpoint)-r.start, col="red",lty=3,lwd=2)
 				#######Draw Interaction regions##########
-				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & space(expInteractions)==viewpoint.chr,]
+				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & as.character(seqnames(expInteractions))==viewpoint.chr,]
 				exp.data$p_start<-start(exp.data)-start(viewpoint)
 				
 				exppalette<-rev(brewer.pal(9,"Reds"))
@@ -630,7 +631,7 @@ plotInteractionsNearViewpoint<-function(obj,distance=5e5,log2fc_cutoff=1,yLim=0)
 				legend("topleft",legend = "Restriction Fragments",fill="blue", cex=0.55,bty="n")
 				abline(v=start(viewpoint)-r.start, col="red",lty=3,lwd=2)
 				#######Draw Interaction regions##########
-				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & space(expInteractions)==viewpoint.chr,]
+				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & as.character(seqnames(expInteractions))==viewpoint.chr,]
 				exp.data$p_start<-start(exp.data)-start(viewpoint)
 				
 				exppalette<-rev(brewer.pal(9,"Reds"))
@@ -646,7 +647,7 @@ plotInteractionsNearViewpoint<-function(obj,distance=5e5,log2fc_cutoff=1,yLim=0)
 				exp.data$col[exp.data$q.value > 0.5]<-exppalette[9]
 				
 				
-				contr.data<-contrInteractions[start(contrInteractions) >=r.start & end(contrInteractions) <= r.end & space(contrInteractions)==viewpoint.chr,]
+				contr.data<-contrInteractions[start(contrInteractions) >=r.start & end(contrInteractions) <= r.end & as.character(seqnames(contrInteractions))==viewpoint.chr,]
 				contr.data$p_start<-start(contr.data)-start(viewpoint)
 				
 				contrpalette<-rev(brewer.pal(9,"Blues"))
@@ -765,12 +766,12 @@ plotInteractionsPerChromosome<-function(obj,chromosomeName){
 				
 				expInteractions   <-expInteractionRegions(obj)
 				
-				if(nrow(expInteractions) >0){
+				if(length(expInteractions) >0){
 					viewpoint <-getViewpoint(obj)
 					
-					if(space(viewpoint)==chromosomeName){
-						chr.exp   <-expInteractions[space(expInteractions)==chromosomeName,]
-						if(nrow(chr.exp ) ==0){
+					if(as.character(seqnames(viewpoint))==chromosomeName){
+						chr.exp   <-expInteractions[as.character(seqnames(expInteractions))==chromosomeName,]
+						if(length(chr.exp ) ==0){
 							stop("There is no interaction regions found in your selected chromosome!!.")
 						}
 						chr.exp.data  <-data.frame(start=start(chr.exp),nReads=chr.exp$nReads,q.value=chr.exp$q.value)
@@ -812,8 +813,8 @@ plotInteractionsPerChromosome<-function(obj,chromosomeName){
 						legend("topleft",legend = "expected reads",lty=c(1),col="blue", cex=0.55,bty="n")
 						
 					}else{
-						chr.exp   <-expInteractions[space(expInteractions)==chromosomeName,]
-						if(nrow(chr.exp) ==0){
+						chr.exp <-expInteractions[as.character(seqnames(expInteractions))==chromosomeName,]
+						if(length(chr.exp) ==0){
 							stop("There is no interaction regions found in your selected chromosome!!.")
 						}	
 						chr.exp.data  <-data.frame(start=start(chr.exp),nReads=chr.exp$nReads,q.value=chr.exp$q.value)
@@ -884,16 +885,16 @@ plotInteractionsPerChromosome<-function(obj,chromosomeName){
 				expInteractions   <-expInteractionRegions(obj)
 				contrInteractions <-contrInteractionRegions(obj)
 				
-				if(nrow(expInteractions) >0){
+				if(length(expInteractions) >0){
 					
 					viewpoint <-getViewpoint(obj)
 					
-					if(space(viewpoint)==chromosomeName){
-						chr.exp   <-expInteractions[space(expInteractions)==chromosomeName,]
-						if(nrow(chr.exp ) ==0){
+					if(as.character(seqnames(viewpoint))==chromosomeName){
+						chr.exp   <-expInteractions[as.character(seqnames(expInteractions))==chromosomeName,]
+						if(length(chr.exp ) ==0){
 							stop("There is no interaction regions found in your selected chromosome!!.")
 						}
-						chr.contr <-contrInteractions[space(contrInteractions)==chromosomeName,]
+						chr.contr <-contrInteractions[as.character(seqnames(contrInteractions))==chromosomeName,]
 						
 						chr.exp.data  <-data.frame(start=start(chr.exp),RPMs=chr.exp$RPMs,q.value=chr.exp$q.value)
 						chr.contr.data <-data.frame(start=start(chr.contr),RPMs=chr.contr$RPMs,q.value=chr.contr$q.value)
@@ -978,10 +979,10 @@ plotInteractionsPerChromosome<-function(obj,chromosomeName){
 						legend("topleft",legend = "expected reads",lty=c(1),col="blue", cex=0.55,bty="n")
 						
 					}else{
-						chr.exp   <-expInteractions[space(expInteractions)==chromosomeName,]
-						chr.contr <-contrInteractions[space(contrInteractions)==chromosomeName,]
+						chr.exp   <-expInteractions[as.character(seqnames(expInteractions))==chromosomeName,]
+						chr.contr <-contrInteractions[as.character(seqnames(contrInteractions))==chromosomeName,]
 						
-						if(nrow(chr.exp) ==0){
+						if(length(chr.exp) ==0){
 							stop("There is no interaction regions found in your selected chromosome!!.")
 						}
 						
@@ -1091,7 +1092,7 @@ setMethod("plotDomainogramNearViewpoint",
 			}
 			########Get viewpoint############
 			viewpoint <-getViewpoint(object)
-			viewpoint.chr<-as.character(space(viewpoint))
+			viewpoint.chr<-as.character(seqnames(viewpoint))
 			########Get organism#############
 			orgName<-organismName(object)
 			chr.size<-0
@@ -1183,7 +1184,7 @@ setMethod("plotDomainogramNearViewpoint",
 				}
 				legend("topleft",legend = "Refseq Genes",fill="red", cex=0.55,bty="n")
 				#######Draw Interaction regions##########
-				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & space(expInteractions)==viewpoint.chr,]
+				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & as.character(seqnames(expInteractions))==viewpoint.chr,]
 				exp.data$p_start<-start(exp.data)-start(viewpoint)
 				
 				exppalette<-rev(brewer.pal(9,"Reds"))
@@ -1309,7 +1310,7 @@ setMethod("plotDomainogramNearViewpoint",
 				}
 				legend("topleft",legend = "Refseq Genes",fill="red", cex=0.55,bty="n")
 				#######Draw Interaction regions##########
-				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & space(expInteractions)==viewpoint.chr,]
+				exp.data<-expInteractions[start(expInteractions) >=r.start & end(expInteractions) <= r.end & as.character(seqnames(expInteractions))==viewpoint.chr,]
 				exp.data$p_start<-start(exp.data)-start(viewpoint)
 				
 				exppalette<-rev(brewer.pal(9,"Blues"))

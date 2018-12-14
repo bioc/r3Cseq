@@ -1,6 +1,6 @@
 # TODO: The following functions are implemented for get the list of genes containing high interactions.
 # Author: Supat Thongjuea
-# Contact : supat.thongjuea@ndcls.ox.ac.uk
+# Contact : supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com
 ###############################################################################
 getExpInteractionsInRefseq<-function(obj,cutoff.qvalue=0.05,expanded_upstream=50e3,expanded_downstream=10e3){
 	stopifnot( is(obj, "r3Cseq") | is(obj,"r3CseqInBatch"))	
@@ -8,10 +8,13 @@ getExpInteractionsInRefseq<-function(obj,cutoff.qvalue=0.05,expanded_upstream=50
 	orgName<-organismName(obj)
 	expInteractions <-expInteractionRegions(obj)
 	expInteractions <-expInteractions[expInteractions$q.value<=cutoff.qvalue,]
-	if(nrow(expInteractions)>0){
-		expInteraction.GRanges<-GRanges(seqnames=space(expInteractions),IRanges(start=start(expInteractions),end=end(expInteractions)),
+	if(length(expInteractions)>0){
+		expInteraction.GRanges<-GRanges(seqnames=seqnames(expInteractions),
+		                                IRanges(start=start(expInteractions),
+		                                        end=end(expInteractions)),
 				nReads=expInteractions$nReads,RPMs=expInteractions$RPMs,q.value=expInteractions$q.value)
-		expInteraction.frame<-data.frame(chromosome=space(expInteractions),start=start(expInteractions),end=end(expInteractions),
+		expInteraction.frame<-data.frame(chromosome=seqnames(expInteractions),
+		                                 start=start(expInteractions),end=end(expInteractions),
 				nReads=expInteractions$nReads,RPMs=expInteractions$RPMs)
 		#########Get genes###############
 		genes<-get3CseqRefGene(obj)
@@ -41,10 +44,12 @@ getContrInteractionsInRefseq<-function(obj,cutoff.qvalue=0.05,expanded_upstream=
 	orgName<-organismName(obj)
 	contrInteractions <-contrInteractionRegions(obj)
 	contrInteractions <-contrInteractions[contrInteractions$q.value<=cutoff.qvalue,]
-	if(nrow(contrInteractions)>0){
-		contrInteraction.GRanges<-GRanges(seqnames=space(contrInteractions),IRanges(start=start(contrInteractions),end=end(contrInteractions)),
+	if(length(contrInteractions)>0){
+		contrInteraction.GRanges<-GRanges(seqnames=seqnames(contrInteractions),
+		                                  IRanges(start=start(contrInteractions),end=end(contrInteractions)),
 				nReads=contrInteractions$nReads,RPMs=contrInteractions$RPMs,q.value=contrInteractions$q.value)
-		contrInteraction.frame<-data.frame(chromosome=space(contrInteractions),start=start(contrInteractions),end=end(contrInteractions),
+		contrInteraction.frame<-data.frame(chromosome=seqnames(contrInteractions),
+		                                   start=start(contrInteractions),end=end(contrInteractions),
 				nReads=contrInteractions$nReads,RPMs=contrInteractions$RPMs)
 		#########Get genes###############
 		genes<-get3CseqRefGene(obj)

@@ -1,4 +1,5 @@
 # Author: Supat Thongjuea
+# Contact : supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com
 ####################################
 #########  AllGenerics.R
 #########

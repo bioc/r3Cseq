@@ -1,7 +1,10 @@
 # TODO: The function below can be used to generate the report.
 # Author: Supat Thongjuea
-# Contact : supat.thongjuea@ndcls.ox.ac.uk
+# Contact : supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com
 ###############################################################################
+#####
+#####The functions below are completely migrated to BioC 3.9 on R 3.6
+#####
 generate3CseqReport<-function (obj){
 	
 	stopifnot( is( obj, "r3Cseq" ) |is( obj, "r3CseqInBatch" ) )
@@ -12,13 +15,13 @@ generate3CseqReport<-function (obj){
 			expLabeled<-expLabel(obj)
 			viewpoint<-getViewpoint(obj)
 			
-			if(nrow(expInteractions)>0){
+			if(length(expInteractions)>0){
 				
 				file_name<-paste(expLabeled,".pdf",sep="")
 				pdf(file=file_name, width=12, height=8, onefile=T, bg="transparent",family = "Helvetica",fonts = NULL)
 				plotOverviewInteractions(obj)
 				plotInteractionsNearViewpoint(obj)
-				plotInteractionsPerChromosome(obj,as.character(space(viewpoint)))
+				plotInteractionsPerChromosome(obj,as.character(seqnames(viewpoint)))
 				plotDomainogramNearViewpoint(obj)
 				dev.off()
 				exportInteractions2text(obj)
@@ -34,12 +37,12 @@ generate3CseqReport<-function (obj){
 			expLabeled<-expLabel(obj)
 			controlLabeled<-contrLabel(obj)
 			viewpoint<-getViewpoint(obj)
-			if(nrow(expInteractions)>0){
+			if(length(expInteractions)>0){
 				file_name<-paste(expLabeled,"_",controlLabeled,".pdf",sep="")
 				pdf(file=file_name, width=12, height=8, onefile=T, bg="transparent",family = "Helvetica",fonts = NULL)
 				plotOverviewInteractions(obj)
 				plotInteractionsNearViewpoint(obj)
-				plotInteractionsPerChromosome(obj,as.character(space(viewpoint)))
+				plotInteractionsPerChromosome(obj,as.character(seqnames(viewpoint)))
 				plotDomainogramNearViewpoint(obj,view="both")
 				dev.off()
 				exportInteractions2text(obj)
@@ -55,12 +58,12 @@ generate3CseqReport<-function (obj){
 			expInteractions  <-expInteractionRegions(obj)
 			contrInteractions <- contrInteractionRegions(obj)
 			viewpoint<-getViewpoint(obj)
-			if(nrow(expInteractions)>0){
+			if(length(expInteractions)>0){
 				file_name<-"myBatch-Analysis-Result.pdf"
 				pdf(file=file_name, width=12, height=8, onefile=T, bg="transparent",family = "Helvetica",fonts = NULL)
 				plotOverviewInteractions(obj)
 				plotInteractionsNearViewpoint(obj)
-				plotInteractionsPerChromosome(obj,as.character(space(viewpoint)))
+				plotInteractionsPerChromosome(obj,as.character(seqnames(viewpoint)))
 				dev.off()
 				exportBatchInteractions2text(obj)
 				print("Files are generated : a pdf file of plots and a text file of interaction regions from replicates.")

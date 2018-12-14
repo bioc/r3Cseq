@@ -1,7 +1,8 @@
 # TODO: These following functions were implemented to get interaction regions.
 # Author: Supat Thongjuea
-# Contact : supat.thongjuea@ndcls.ox.ac.uk
-
+# Contact : supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com
+#####
+#####The functions below are completely migrated to BioC 3.9 on R 3.6
 #####
 setGeneric(
 		name="getCoverage",
@@ -147,13 +148,15 @@ setMethod("getReadCountPerRestrictionFragment",
 					####Build GRanges for restriction site#####
 					print(paste("Fragmenting genome by....",resEnzyme,"....",sep=""))
 					wholeFragments<-getWholeGenomeRestrictionFragments(enzymeDb,resEnzyme,orgName)
-					wholeFragments.RagedData<-RangedData(space=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
+					wholeFragments.GRanges<-GRanges(seqnames=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
 					##########Count all reads located inside the fragments######
 					exp.GRanges<-expRawData(object)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=exp.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=exp.GRanges)
 					reads<-data.frame(nReads=readsPerFragment)
-					countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),reads)
+					####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+					values(wholeFragments.GRanges)=reads
+					countTable<-wholeFragments.GRanges
 					countTable.filtered<-countTable[countTable$nReads >0,]
 					expReadCount(object)<-countTable.filtered
 					print("Count processing is done.")
@@ -168,19 +171,27 @@ setMethod("getReadCountPerRestrictionFragment",
 					####Build GRanges for restriction site#####
 					print(paste("Fragmenting genome by....",resEnzyme,"....",sep=""))
 					wholeFragments<-getWholeGenomeRestrictionFragments(enzymeDb,resEnzyme,orgName)
-					wholeFragments.RagedData<-RangedData(space=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
+					wholeFragments.GRanges<-GRanges(seqnames=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
 					
-					########Make RangedData for the 5' and 3' of RE#######
+					########Make GRanges for the 5' and 3' of RE#######
 					exp.GRanges<-expRawData(object)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-					wholeFragments_5_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=start(wholeFragments.RagedData)+exp.read.length))
-					wholeFragments_3_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=end(wholeFragments.RagedData)-exp.read.length,end=end(wholeFragments.RagedData)))
+					wholeFragments_5_prime.GRanges<-GRanges(seqnames =seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=start(wholeFragments.GRanges),
+					                                        end=start(wholeFragments.GRanges)+exp.read.length))
 					
-					readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.RangedData,subject=exp.GRanges)
-					readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.RangedData,subject=exp.GRanges)
+					wholeFragments_3_prime.GRanges<-GRanges(seqnames =seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=end(wholeFragments.GRanges)-exp.read.length,
+					                                        end=end(wholeFragments.GRanges)))
+					
+					readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.GRanges,subject=exp.GRanges)
+					readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.GRanges,subject=exp.GRanges)
 					combined_reads<-readsPerFragment_5+readsPerFragment_3
 					reads<-data.frame(nReads=combined_reads)
-					countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),reads)
+					
+					####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+					values(wholeFragments.GRanges)=reads
+					countTable<-wholeFragments.GRanges
 					countTable.filtered<-countTable[countTable$nReads >0,]
 					expReadCount(object)<-countTable.filtered
 					print("Count processing is done.")
@@ -199,22 +210,27 @@ setMethod("getReadCountPerRestrictionFragment",
 					####Build GRanges for restriction site#####
 					print(paste("Fragmenting genome by....",resEnzyme,"....",sep=""))
 					wholeFragments<-getWholeGenomeRestrictionFragments(enzymeDb,resEnzyme,orgName)
-					wholeFragments.RagedData<-RangedData(space=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
+					wholeFragments.GRanges<-GRanges(seqnames =as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
 					##########Count all reads in the experiment, which are located inside the fragments######
 					exp.GRanges<-expRawData(object)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=exp.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=exp.GRanges)
 					exp.reads<-data.frame(nReads=readsPerFragment)
-					exp.countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),exp.reads)
+					
+					####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+					values(wholeFragments.GRanges)=exp.reads
+					exp.countTable<-wholeFragments.GRanges
 					exp.countTable.filtered<-exp.countTable[exp.countTable$nReads >0,]
 					expReadCount(object)<-exp.countTable.filtered
 					print("Count processing in the experiment is done.")
-				    ##########Count all reads in the control, which are located inside the fragments######
+				  ##########Count all reads in the control, which are located inside the fragments######
 					contr.GRanges<-contrRawData(object)
 					contr.GRanges<-excludeReadsNearViewpoint(object,contr.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=contr.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=contr.GRanges)
 					contr.reads<-data.frame(nReads=readsPerFragment)
-					contr.countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),contr.reads)
+					####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+					values(wholeFragments.GRanges)=contr.reads
+					contr.countTable<-wholeFragments.GRanges
 					contr.countTable.filtered<-contr.countTable[contr.countTable$nReads >0,]
 					contrReadCount(object)<-contr.countTable.filtered
 					print("Count processing in the control is done.")
@@ -230,30 +246,40 @@ setMethod("getReadCountPerRestrictionFragment",
 					####Build GRanges for restriction site#####
 					print(paste("Fragmenting genome by....",resEnzyme,"....",sep=""))
 					wholeFragments<-getWholeGenomeRestrictionFragments(enzymeDb,resEnzyme,orgName)
-					wholeFragments.RagedData<-RangedData(space=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
+					wholeFragments.GRanges<-GRanges(seqnames =as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
 					
 					########Make RangedData for the 5' and 3' of RE#######
 					exp.GRanges<-expRawData(object)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-					wholeFragments_5_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=start(wholeFragments.RagedData)+exp.read.length))
-					wholeFragments_3_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=end(wholeFragments.RagedData)-exp.read.length,end=end(wholeFragments.RagedData)))
+					wholeFragments_5_prime.GRanges<-GRanges(seqnames =seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=start(wholeFragments.GRanges),
+					                                        end=start(wholeFragments.GRanges)+exp.read.length))
 					
-					exp.readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.RangedData,subject=exp.GRanges)
-					exp.readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.RangedData,subject=exp.GRanges)
+					wholeFragments_3_prime.GRanges<-GRanges(seqnames =seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=end(wholeFragments.GRanges)-exp.read.length,
+					                                        end=end(wholeFragments.GRanges)))
+					
+					exp.readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.GRanges,subject=exp.GRanges)
+					exp.readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.GRanges,subject=exp.GRanges)
 					exp.combined_reads<-exp.readsPerFragment_5+exp.readsPerFragment_3
 					exp.reads<-data.frame(nReads=exp.combined_reads)
-					exp.countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),exp.reads)
+					
+					####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+					values(wholeFragments.GRanges)=exp.reads
+					exp.countTable<-wholeFragments.GRanges
 					exp.countTable.filtered<-exp.countTable[exp.countTable$nReads >0,]
 					expReadCount(object)<-exp.countTable.filtered
 					print("Count processing in the experiment is done.")
 					
 					contr.GRanges<-contrRawData(object)
 					contr.GRanges<-excludeReadsNearViewpoint(object,contr.GRanges,nExcludedFragments)
-					contr.readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.RangedData,subject=contr.GRanges)
-					contr.readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.RangedData,subject=contr.GRanges)
+					contr.readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.GRanges,subject=contr.GRanges)
+					contr.readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.GRanges,subject=contr.GRanges)
 					contr.combined_reads<-contr.readsPerFragment_5+contr.readsPerFragment_3
 					contr.reads<-data.frame(nReads=contr.combined_reads)
-					contr.countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),contr.reads)
+					####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+					values(wholeFragments.GRanges)=contr.reads
+					contr.countTable<-wholeFragments.GRanges
 					contr.countTable.filtered<-contr.countTable[contr.countTable$nReads >0,]
 					contrReadCount(object)<-contr.countTable.filtered
 					print("Count processing in the control is done.")
@@ -267,7 +293,7 @@ setMethod("getReadCountPerRestrictionFragment",
 ##########
 setGeneric(
 		name="getReadCountPerWindow",
-		def=function(object,windowSize=5e3,nFragmentExcludedReadsNearViewpoint=2,mode=c("non-overlapping", "overlapping")){
+		def=function(object,windowSize=5e3,nFragmentExcludedReadsNearViewpoint=2,mode=c("non-overlapping")){
 			standardGeneric("getReadCountPerWindow")
 		}
 )
@@ -296,40 +322,50 @@ setMethod("getReadCountPerWindow",
 			#####Select the read count methods#########			
 			if(isControlInvolved(object)==FALSE){
 				
-				wholeFragments.RagedData<-getFragmentsPerWindow(object,windowSize,mode)
+				wholeFragments.GRanges<-getFragmentsPerWindow(object,windowSize,mode)
 				##########Count all reads located inside the fragments######
 				exp.GRanges<-expRawData(object)
 				exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-				readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=exp.GRanges)
+				readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=exp.GRanges)
 				reads<-data.frame(nReads=readsPerFragment)
-				countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),reads)
+				
+				####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+				values(wholeFragments.GRanges)<-reads
+				countTable<-wholeFragments.GRanges
 				countTable.filtered<-countTable[countTable$nReads >0,]
 				expReadCount(object)<-countTable.filtered
-				expRPM(object)<-RangedData()
+				expRPM(object)<-GRanges()
 				print("Count processing is done.")
 				assign(objName,object,envir=parent.frame())
 				invisible(1)
 			}
 			if(isControlInvolved(object)==TRUE){
-				wholeFragments.RagedData<-getFragmentsPerWindow(object,windowSize,mode)
+				wholeFragments.GRanges<-getFragmentsPerWindow(object,windowSize,mode)
 				##########Count all reads located inside the fragments######
 				exp.GRanges<-expRawData(object)
 				exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-				exp.readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=exp.GRanges)
+				exp.readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=exp.GRanges)
 				exp.reads<-data.frame(nReads=exp.readsPerFragment)
-				exp.countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),exp.reads)
+				
+				####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+				values(wholeFragments.GRanges)<-exp.reads
+				exp.countTable<-wholeFragments.GRanges
+				
 				exp.countTable.filtered<-exp.countTable[exp.countTable$nReads >0,]
 				expReadCount(object)<-exp.countTable.filtered
-				expRPM(object)<-RangedData()
+				expRPM(object)<-GRanges()
 				
 				contr.GRanges<-contrRawData(object)
 				contr.GRanges<-excludeReadsNearViewpoint(object,contr.GRanges,nExcludedFragments)
-				contr.readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=contr.GRanges)
+				contr.readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=contr.GRanges)
 				contr.reads<-data.frame(nReads=contr.readsPerFragment)
-				contr.countTable<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData)),contr.reads)
+				
+				####migrate the countTable to GRanges because BioC3.9 will not support the RagnedData###
+				values(wholeFragments.GRanges)<-contr.reads
+				contr.countTable<-wholeFragments.GRanges
 				contr.countTable.filtered<-contr.countTable[contr.countTable$nReads >0,]
 				contrReadCount(object)<-contr.countTable.filtered
-				contrRPM(object)<-RangedData()
+				contrRPM(object)<-GRanges()
 				
 				print("Count processing is done.")
 				assign(objName,object,envir=parent.frame())
@@ -361,7 +397,7 @@ setMethod("calculateRPM",
 				if(isControlInvolved(object)==FALSE){
 					objName 	 <- deparse(substitute(object))
 					expReadCounts   <-expReadCount(object)
-					if(nrow(expReadCounts)>0){
+					if(length(expReadCounts)>0){
 						coef<-getPowerLawFittedCoeficient(expReadCounts$nReads)
 						expReadCounts$RPMs<-powerLawFittedRPM(expReadCounts$nReads,coef) 
 						expRPM(object) <-expReadCounts
@@ -375,7 +411,7 @@ setMethod("calculateRPM",
 				if(isControlInvolved(object)==TRUE){
 					expReadCounts   <-expReadCount(object)
 					contrReadCounts <-contrReadCount(object)
-					if(nrow(expReadCounts)>0){
+					if(length(expReadCounts)>0){
 						
 						objName 	 <- deparse(substitute(object))
 						exp.coef	 <- getPowerLawFittedCoeficient(expReadCounts$nReads)
@@ -400,7 +436,7 @@ setMethod("calculateRPM",
 					objName 	 <- deparse(substitute(object))
 					lib.size<-expLibrarySize(object)
 					expReadCounts   <-expReadCount(object)
-					if(nrow(expReadCounts)>0){
+					if(length(expReadCounts)>0){
 						expReadCounts$RPMs <- normalcalRPM(expReadCounts$nReads,lib.size)
 						expRPM(object) <-expReadCounts
 						assign(objName,object,envir=parent.frame())
@@ -413,7 +449,7 @@ setMethod("calculateRPM",
 				if(isControlInvolved(object)==TRUE){
 					expReadCounts   <-expReadCount(object)
 					contrReadCounts <-contrReadCount(object)
-						if(nrow(expReadCounts)>0){
+						if(length(expReadCounts)>0){
 							
 							objName 	 <- deparse(substitute(object))	
 							expLibSize 	 <- expLibrarySize(object)
@@ -460,7 +496,7 @@ setMethod("getInteractions",
 			}
 			if(isControlInvolved(object)==FALSE){
 				expRPM.RangedData <-expRPM(object)
-				if(nrow(expRPM.RangedData)>0){
+				if(length(expRPM.RangedData)>0){
 					objName <- deparse(substitute(object))
 					expInteraction<-assign3CseqSigContact(object,expRPM.RangedData,smoothing.parameter,fdr)	
 					expInteractionRegions(object) <-expInteraction
@@ -475,7 +511,7 @@ setMethod("getInteractions",
 				expRPM.RangedData   <-expRPM(object)
 				contrRPM.RangedData <-contrRPM(object)
 				
-				if(nrow(expRPM.RangedData)>0){
+				if(length(expRPM.RangedData)>0){
 					objName <- deparse(substitute(object))
 					expInteraction<-assign3CseqSigContact(object,expRPM.RangedData,smoothing.parameter,fdr)	
 					expInteractionRegions(object) <-expInteraction

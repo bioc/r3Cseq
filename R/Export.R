@@ -1,6 +1,6 @@
 # TODO: The following functions are implemented for exporting the output of 3C-seq results.
 # Author: Supat Thongjuea
-# Contact : supat.thongjuea@ndcls.ox.ac.uk
+# Contact : supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com
 ###############################################################################
 setGeneric(
 		name="export3CseqRawReads2bedGraph",
@@ -21,10 +21,12 @@ setMethod("export3CseqRawReads2bedGraph",
 				expLabeled<-expLabel(object)	
 				orgName  <- organismName(object)
 				
-				if(length(expRawReads.GRanges)>0){	
+				if(base::length(expRawReads.GRanges)>0){	
 					print("making coverage vector......")
 					exp.read.cov      <- RleList()
 					#***Fix the error in this version by changing from RangeData to GRanges
+					exp.read.cov   <- coverage(expRawReads.GRanges)
+					
 					export.iranges<-as(exp.read.cov,"GRanges")
 					export.ucsc<-as(export.iranges,"UCSCData")
 					export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=expLabeled,description="Raw reads")		
@@ -43,7 +45,7 @@ setMethod("export3CseqRawReads2bedGraph",
 				
 				orgName  <- organismName(object)
 				
-				if(length(expRawReads.GRanges)>0){	
+				if(base::length(expRawReads.GRanges)>0){	
 					print("making coverage vector......")
 					exp.read.cov      <- RleList()
 					contr.read.cov      <- RleList()
@@ -95,27 +97,27 @@ setMethod("export3Cseq2bedGraph",
 				expLabeled<-expLabel(object)
 				
 				if(datatype=="rpm"){	
-					if(nrow(expRPMs)>0){
+					if(base::length(expRPMs)>0){
 						##Fix export.f by adding "as.character"
-						export.f <-data.frame(space=as.character(space(expRPMs)),start=start(expRPMs),end=end(expRPMs),score=expRPMs$RPMs)
-						export.iranges<-RangedData(space=export.f$space,IRanges(start=export.f$start,end=export.f$end),score=export.f$score)
+						export.f <-data.frame(seqnames=as.character(seqnames(expRPMs)),start=start(expRPMs),end=end(expRPMs),score=expRPMs$RPMs)
+						export.GRanges<-GRanges(seqnames=export.f$seqnames,IRanges(start=export.f$start,end=export.f$end),score=export.f$score)
 						#export.iranges<-export.iranges[export.iranges$score>0,]<--fix the error in this version
-						export.iranges<-as(export.iranges[export.iranges$score>0,],"GRanges")
-						export.ucsc<-as(export.iranges,"UCSCData")
-						export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(expLabeled,"_RPMs",sep=""),description="read per million")		
-						file_name<-paste(expLabeled,".RPMs.bedGraph.gz",sep="")
-						export(export.ucsc,file_name,"bedGraph")
+					 	export.GRanges<-export.GRanges[export.GRanges$score>0,]
+					 	export.ucsc<-as(export.GRanges,"UCSCData")
+					 	export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(expLabeled,"_RPMs",sep=""),description="read per million")		
+					 	file_name<-paste(expLabeled,".RPMs.bedGraph.gz",sep="")
+					 	export(export.ucsc,file_name,"bedGraph")
 						print(paste("File",file_name,"' is created."))
 					}else{
 						stop("No RPM found in the r3Cseq object, you have to run the function 'getReadCountPerRestrictionFragment' following by the function 'calculateRPM'.")	
 					}
 				}else if(datatype=="read_count"){
-					if(nrow(expRPMs)>0){
-						export.f <-data.frame(space=as.character(space(expRPMs)),start=start(expRPMs),end=end(expRPMs),score=expRPMs$nReads)
-						export.iranges<-RangedData(space=export.f$space,IRanges(start=export.f$start,end=export.f$end),score=export.f$score)
+					if(base::length(expRPMs)>0){
+						export.f <-data.frame(seqnames=as.character(seqnames(expRPMs)),start=start(expRPMs),end=end(expRPMs),score=expRPMs$nReads)
+						export.GRanges<-GRanges(seqnames=export.f$seqnames,IRanges(start=export.f$start,end=export.f$end),score=export.f$score)
 						#export.iranges<-export.iranges[export.iranges$score>0,]
-						export.iranges<-as(export.iranges[export.iranges$score>0,],"GRanges")
-						export.ucsc<-as(export.iranges,"UCSCData")
+						export.GRanges<-export.GRanges[export.GRanges$score>0,]
+						export.ucsc<-as(export.GRanges,"UCSCData")
 						export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(expLabeled,"_ReadCounts",sep=""),description="read count")	
 						file_name<-paste(expLabeled,".ReadCounts.bedGraph.gz",sep="")
 						export(export.ucsc,file_name,"bedGraph")
@@ -136,21 +138,21 @@ setMethod("export3Cseq2bedGraph",
 				
 				if(datatype=="rpm"){
 
-					if(nrow(expRPMs)>0){
-						export.iranges<-RangedData(space=as.character(space(expRPMs)),IRanges(start=start(expRPMs),end=end(expRPMs)),score=expRPMs$RPMs)
+					if(base::length(expRPMs)>0){
+						export.GRanges<-GRanges(seqnames =as.character(seqnames(expRPMs)),IRanges(start=start(expRPMs),end=end(expRPMs)),score=expRPMs$RPMs)
 						#export.iranges<-export.iranges[export.iranges$score>0,]
-						export.iranges<-as(export.iranges[export.iranges$score>0,],"GRanges")
-						export.ucsc<-as(export.iranges,"UCSCData")
+						export.GRanges<-export.GRanges[export.GRanges$score>0,]
+						export.ucsc<-as(export.GRanges,"UCSCData")
 						export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(expLabeled,"_RPMs",sep=""),description="reads per million")	
 						file_name<-paste(expLabeled,".RPMs.bedGraph.gz",sep="")
 						export(export.ucsc,file_name,"bedGraph")
 						print(paste("File",file_name,"' is created."))
 						
 
-						export.iranges<-RangedData(space=as.character(space(contrRPMs)),IRanges(start=start(contrRPMs),end=end(contrRPMs)),score=contrRPMs$RPMs)
+						export.GRanges<-GRanges(seqnames=as.character(seqnames(contrRPMs)),IRanges(start=start(contrRPMs),end=end(contrRPMs)),score=contrRPMs$RPMs)
 						#export.iranges<-export.iranges[export.iranges$score>0,]
-						export.iranges<-as(export.iranges[export.iranges$score>0,],"GRanges")
-						export.ucsc<-as(export.iranges,"UCSCData")
+						export.GRanges<-export.GRanges[export.GRanges$score>0,]
+						export.ucsc<-as(export.GRanges,"UCSCData")
 						export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(controlLabeled,"_RPMs",sep=""),description="reads per million")	
 						file_name<-paste(controlLabeled,".RPMs.bedGraph.gz",sep="")
 						export(export.ucsc,file_name,"bedGraph")
@@ -160,20 +162,20 @@ setMethod("export3Cseq2bedGraph",
 						stop("No RPM found in the r3Cseq object, you have to run the function 'getReadCountPerRestrictionFragment' following by the function 'calculateRPM'.")	
 					}
 				}else if(datatype=="read_count"){
-					if(nrow(expRPMs)>0){
-						export.iranges<-RangedData(space=as.character(space(expRPMs)),IRanges(start=start(expRPMs),end=end(expRPMs)),score=expRPMs$nReads)
+					if(base::length(expRPMs)>0){
+					  export.GRanges<-GRanges(seqnames=as.character(seqnames(expRPMs)),IRanges(start=start(expRPMs),end=end(expRPMs)),score=expRPMs$nReads)
 						#export.iranges<-export.iranges[export.iranges$score>0,]
-						export.iranges<-as(export.iranges[export.iranges$score>0,],"GRanges")
-						export.ucsc<-as(export.iranges,"UCSCData")
+					  export.GRanges<-export.GRanges[export.GRanges$score>0,]
+						export.ucsc<-as(export.GRanges,"UCSCData")
 						export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(expLabeled,"_ReadCounts",sep=""),description="read count")	
 						file_name<-paste(expLabeled,".ReadCounts.bedGraph.gz",sep="")
 						export(export.ucsc,file_name,"bedGraph")
 						print(paste("File",file_name,"' is created."))
 					
-						export.iranges<-RangedData(space=as.character(space(contrRPMs)),IRanges(start=start(contrRPMs),end=end(contrRPMs)),score=contrRPMs$nReads)
+						export.GRanges<-GRanges(seqnames=as.character(seqnames(contrRPMs)),IRanges(start=start(contrRPMs),end=end(contrRPMs)),score=contrRPMs$nReads)
 						#export.iranges<-export.iranges[export.iranges$score>0,]
-						export.iranges<-as(export.iranges[export.iranges$score>0,],"GRanges")
-						export.ucsc<-as(export.iranges,"UCSCData")
+						export.GRanges<-export.GRanges[export.GRanges$score>0,]
+						export.ucsc<-as(export.GRanges,"UCSCData")
 						export.ucsc@trackLine <- new("GraphTrackLine",type="bedGraph",name=paste(controlLabeled,"_ReadCounts",sep=""),description="read count")	
 						file_name<-paste(controlLabeled,".ReadCounts.bedGraph.gz",sep="")
 						export(export.ucsc,file_name,"bedGraph")
@@ -206,10 +208,10 @@ setMethod("exportInteractions2text",
 				expInteractions<-expInteractionRegions(object)
 				expLabeled<-expLabel(object)
 				
-					if(nrow(expInteractions)>0){
+					if(base::length(expInteractions)>0){
 						
 						file_name<-paste(expLabeled,".interaction.txt",sep="")
-						export.data<-data.frame(chromosome=space(expInteractions),
+						export.data<-data.frame(chromosome=seqnames(expInteractions),
 								start=start(expInteractions),end=end(expInteractions),
 								nReads=expInteractions$nReads,RPMs=expInteractions$RPMs,
 								p.value=expInteractions$p.value,q.value=expInteractions$q.value)
@@ -228,10 +230,10 @@ setMethod("exportInteractions2text",
 				expLabeled<-expLabel(object)
 				controlLabeled<-contrLabel(object)
 				
-				if(nrow(expInteractions)>0){
+				if(base::length(expInteractions)>0){
 					
 					file_name<-paste(expLabeled,".interaction.txt",sep="")
-					export.data<-data.frame(chromosome=space(expInteractions),
+					export.data<-data.frame(chromosome=seqnames(expInteractions),
 							start=start(expInteractions),end=end(expInteractions),
 							nReads=expInteractions$nReads,RPMs=expInteractions$RPMs,
 							p.value=expInteractions$p.value,q.value=expInteractions$q.value)
@@ -244,10 +246,10 @@ setMethod("exportInteractions2text",
 					stop("No interaction regions found in the r3Cseq object, you have to run the r3Cseq pipeline.")	
 				}
 				
-				if(nrow(contrInteractions)>0){
+				if(base::length(contrInteractions)>0){
 					
 					file_name<-paste(controlLabeled,".interaction.txt",sep="")
-					export.data<-data.frame(chromosome=space(contrInteractions),
+					export.data<-data.frame(chromosome=seqnames(contrInteractions),
 							start=start(contrInteractions),end=end(contrInteractions),
 							nReads=contrInteractions$nReads,RPMs=contrInteractions$RPMs,
 							p.value=contrInteractions$p.value,q.value=contrInteractions$q.value)
@@ -281,10 +283,10 @@ setMethod("exportBatchInteractions2text",
 				expInteractions  <-expInteractionRegions(object)
 				contrInteractions <- contrInteractionRegions(object)
 				
-				if(nrow(expInteractions)>0){
+				if(base::length(expInteractions)>0){
 					
 					file_name<-"Batch.experiment.interaction.txt"
-					export.data<-data.frame(chromosome=space(expInteractions),
+					export.data<-data.frame(chromosome=seqnames(expInteractions),
 							start=start(expInteractions),end=end(expInteractions),
 							nReads=expInteractions$nReads,RPMs=expInteractions$RPMs,
 							p.value=expInteractions$p.value,q.value=expInteractions$q.value)
@@ -297,10 +299,10 @@ setMethod("exportBatchInteractions2text",
 					stop("No interaction regions found in the r3Cseq object, you have to run the r3Cseq pipeline.")	
 				}
 				
-				if(nrow(contrInteractions)>0){
+				if(base::length(contrInteractions)>0){
 					
 					file_name<-"Batch.control.interaction.txt"
-					export.data<-data.frame(chromosome=space(contrInteractions),
+					export.data<-data.frame(chromosome=seqnames(contrInteractions),
 							start=start(contrInteractions),end=end(contrInteractions),
 							nReads=contrInteractions$nReads,RPMs=contrInteractions$RPMs,
 							p.value=contrInteractions$p.value,q.value=contrInteractions$q.value)

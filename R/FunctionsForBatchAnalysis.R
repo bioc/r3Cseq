@@ -1,6 +1,9 @@
 # TODO: These following functions were implemented to get the interaction regions for replicates data.
 # Author: Supat Thongjuea
-# Contact : supat.thongjuea@ndcls.ox.ac.uk
+# Contact : supat.thongjuea@imm.ox.ac.uk or supat.thongjuea@gmail.com
+#####
+#####The functions below are completely migrated to BioC 3.9 on R 3.6
+#####
 ########################################
 setGeneric(
 		name="getBatchRawReads",
@@ -151,16 +154,16 @@ setMethod("getBatchReadCountPerRestrictionFragment",
 			
 			if(selected_methods=="wholeReads"){
 				###########Making GRange Object############
-				wholeFragments.RagedData<-RangedData(space=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
+				wholeFragments.GRanges<-GRanges(seqnames = as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
 				###########Make count table for each bam file in the experiments########
-				readCountTable<-data.frame(chromosome=space(wholeFragments.RagedData),start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData))
+				readCountTable<-data.frame(chromosome=seqnames(wholeFragments.GRanges),start=start(wholeFragments.GRanges),end=end(wholeFragments.GRanges))
 				for(i in 1:length(exp.bam.files)){   
 					print(paste("start counting reads in...",exp.bam.files[i], "....file in the experiment"))
 					fileName<-gsub(".bam","",expFiles[i])
 					fileName<-paste(fileName,".rData",sep="")
 					load(fileName)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=exp.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=exp.GRanges)
 					reads<-data.frame(nReads=readsPerFragment)
 					Name<-gsub(".bam","",expFiles[i])
 					colnames(reads)[1]<-Name
@@ -173,7 +176,7 @@ setMethod("getBatchReadCountPerRestrictionFragment",
 					fileName<-paste(fileName,".rData",sep="")
 					load(fileName)
 					contr.GRanges<-excludeReadsNearViewpoint(object,contr.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=contr.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=contr.GRanges)
 					reads<-data.frame(nReads=readsPerFragment)
 					Name<-gsub(".bam","",contrFiles[i])
 					colnames(reads)[1]<-Name
@@ -182,17 +185,21 @@ setMethod("getBatchReadCountPerRestrictionFragment",
 				#########Filter out fragment with no read###########################
 					n<-ncol(readCountTable)
 					readCountTable.f<-readCountTable[rowSums(readCountTable[,4:n]) >0,]
-					readCountTable.RangedData<-RangedData(space=readCountTable.f$chromosome,IRanges(start=readCountTable.f$start,end=readCountTable.f$end),readCountTable.f[,4:n])
-					readCountTable(object)<-readCountTable.RangedData
+					readCountTable.GRanges<-GRanges(seqnames=readCountTable.f$chromosome,
+					                                IRanges(start=readCountTable.f$start,end=readCountTable.f$end))
+					values(readCountTable.GRanges)<-readCountTable.f[,4:n]
+					readCountTable(object)<-readCountTable.GRanges
 					assign(objName,object,envir=parent.frame())
 					invisible(1)
 					print("The countTable is created!!!.")
 			}
 			if(selected_methods=="adjacentFragmentEndsReads"){
 				###########Making GRange Object############
-				wholeFragments.RagedData<-RangedData(space=as.character(wholeFragments$chromosome),IRanges(start=wholeFragments$start,end=wholeFragments$end))
+				wholeFragments.GRanges<-GRanges(seqnames=as.character(wholeFragments$chromosome),
+				                                IRanges(start=wholeFragments$start,end=wholeFragments$end))
 				###########Make count table for each bam file in the experiments########
-				readCountTable<-data.frame(chromosome=space(wholeFragments.RagedData),start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData))
+				readCountTable<-data.frame(chromosome=seqnames(wholeFragments.GRanges),
+				                           start=start(wholeFragments.GRanges),end=end(wholeFragments.GRanges))
 				for(i in 1:length(exp.bam.files)){    
 					print(paste("start counting reads in...",exp.bam.files[i], "....file in the experiment"))
 					fileName<-gsub(".bam","",expFiles[i])
@@ -200,11 +207,16 @@ setMethod("getBatchReadCountPerRestrictionFragment",
 					load(fileName)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
 					########Make RangedData for the 5' and 3' of RE#######
-					wholeFragments_5_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=start(wholeFragments.RagedData)+exp.read.length[i]))
-					wholeFragments_3_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=end(wholeFragments.RagedData)-exp.read.length[i],end=end(wholeFragments.RagedData)))
+					wholeFragments_5_prime.GRanges<-GRanges(seqnames=seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=start(wholeFragments.GRanges),
+					                                        end=start(wholeFragments.GRanges)+exp.read.length[i]))
 					
-					readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.RangedData,subject=exp.GRanges)
-					readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.RangedData,subject=exp.GRanges)
+					wholeFragments_3_prime.GRanges<-GRanges(seqnames=seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=end(wholeFragments.GRanges)-exp.read.length[i],
+					                                        end=end(wholeFragments.GRanges)))
+					
+					readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.GRanges,subject=exp.GRanges)
+					readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.GRanges,subject=exp.GRanges)
 					combined_reads<-readsPerFragment_5+readsPerFragment_3
 					reads<-data.frame(nReads=combined_reads)
 					fileName<-gsub(".bam","",expFiles[i])
@@ -218,11 +230,15 @@ setMethod("getBatchReadCountPerRestrictionFragment",
 					load(fileName)	
 					contr.GRanges<-excludeReadsNearViewpoint(object,contr.GRanges,nExcludedFragments)
 					########Make RangedData for the 5' and 3' of RE#######
-					wholeFragments_5_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=start(wholeFragments.RagedData),end=start(wholeFragments.RagedData)+contr.read.length[i]))
-					wholeFragments_3_prime.RangedData<-RangedData(space=space(wholeFragments.RagedData),IRanges(start=end(wholeFragments.RagedData)-contr.read.length[i],end=end(wholeFragments.RagedData)))
+					wholeFragments_5_prime.GRanges<-GRanges(seqnames=seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=start(wholeFragments.GRanges),
+					                                                end=start(wholeFragments.GRanges)+contr.read.length[i]))
+					wholeFragments_3_prime.GRanges<-GRanges(seqnames=seqnames(wholeFragments.GRanges),
+					                                        IRanges(start=end(wholeFragments.GRanges)-contr.read.length[i],
+					                                                end=end(wholeFragments.GRanges)))
 					
-					readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.RangedData,subject=contr.GRanges)
-					readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.RangedData,subject=contr.GRanges)
+					readsPerFragment_5 <- countOverlaps(wholeFragments_5_prime.GRanges,subject=contr.GRanges)
+					readsPerFragment_3 <- countOverlaps(wholeFragments_3_prime.GRanges,subject=contr.GRanges)
 					combined_reads<-readsPerFragment_5+readsPerFragment_3
 					reads<-data.frame(nReads=combined_reads)
 					fileName<-gsub(".bam","",contrFiles[i])
@@ -232,8 +248,10 @@ setMethod("getBatchReadCountPerRestrictionFragment",
 				#########Filter out fragment with no read###########################
 				n<-ncol(readCountTable)
 				readCountTable.f<-readCountTable[rowSums(readCountTable[,4:n]) >0,]
-				readCountTable.RangedData<-RangedData(space=readCountTable.f$chromosome,IRanges(start=readCountTable.f$start,end=readCountTable.f$end),readCountTable.f[,4:n])
-				readCountTable(object)<-readCountTable.RangedData
+				readCountTable.GRanges<-GRanges(seqnames=readCountTable.f$chromosome,
+				                                IRanges(start=readCountTable.f$start,end=readCountTable.f$end))
+				values(readCountTable.GRanges)<-readCountTable.f[,4:n]
+				readCountTable(object)<-readCountTable.GRanges
 				assign(objName,object,envir=parent.frame())
 				invisible(1)
 				print("The countTable is created!!!.")
@@ -297,16 +315,18 @@ setMethod("getBatchReadCountPerWindow",
 			expFiles<-BamExpFiles(object)
 			contrFiles<-BamContrFiles(object)
 			###########################################
-			wholeFragments.RagedData<-getFragmentsPerWindow(object,windowSize,mode)
+			wholeFragments.GRanges<-getFragmentsPerWindow(object,windowSize,mode)
 			###########Make count table for each bam file in the experiments########
-				readCountTable<-data.frame(chromosome=space(wholeFragments.RagedData),start=start(wholeFragments.RagedData),end=end(wholeFragments.RagedData))
+				readCountTable<-data.frame(chromosome=seqnames(wholeFragments.GRanges),
+				                           start=start(wholeFragments.GRanges),
+				                           end=end(wholeFragments.GRanges))
 				for(i in 1:length(exp.bam.files)){   
 					print(paste("start counting reads in...",exp.bam.files[i], "....file in the experiment"))
 					fileName<-gsub(".bam","",expFiles[i])
 					fileName<-paste(fileName,".rData",sep="")
 					load(fileName)
 					exp.GRanges<-excludeReadsNearViewpoint(object,exp.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=exp.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=exp.GRanges)
 					reads<-data.frame(nReads=readsPerFragment)
 					Name<-gsub(".bam","",expFiles[i])
 					colnames(reads)[1]<-Name
@@ -319,7 +339,7 @@ setMethod("getBatchReadCountPerWindow",
 					fileName<-paste(fileName,".rData",sep="")
 					load(fileName)
 					contr.GRanges<-excludeReadsNearViewpoint(object,contr.GRanges,nExcludedFragments)
-					readsPerFragment <- countOverlaps(wholeFragments.RagedData,subject=contr.GRanges)
+					readsPerFragment <- countOverlaps(wholeFragments.GRanges,subject=contr.GRanges)
 					reads<-data.frame(nReads=readsPerFragment)
 					Name<-gsub(".bam","",contrFiles[i])
 					colnames(reads)[1]<-Name
@@ -328,8 +348,11 @@ setMethod("getBatchReadCountPerWindow",
 				#########Filter out fragment with no read###########################
 				n<-ncol(readCountTable)
 				readCountTable.f<-readCountTable[rowSums(readCountTable[,4:n]) >0,]
-				readCountTable.RangedData<-RangedData(space=readCountTable.f$chromosome,IRanges(start=readCountTable.f$start,end=readCountTable.f$end),readCountTable.f[,4:n])
-				readCountTable(object)<-readCountTable.RangedData
+				readCountTable.GRanges<-GRanges(seqnames=readCountTable.f$chromosome,
+				                                IRanges(start=readCountTable.f$start,
+				                                        end=readCountTable.f$end))
+				values(readCountTable.GRanges)<-readCountTable.f[,4:n]
+        readCountTable(object)<-readCountTable.GRanges
 				assign(objName,object,envir=parent.frame())
 				invisible(1)
 				print("The countTable is created!!!.")		
@@ -363,27 +386,31 @@ setMethod("calculateBatchRPM",
 			###########################################
 			objName <- deparse(substitute(object))
 			count.data<-readCountTable(object)
-			if(nrow(count.data)==0){
+			if(length(count.data)==0){
 				stop("No reads found in the countTable object, please run getBatchReadCountPerRestrictionFragment or getBatchReadCountPerWindow function!!")
 			}
 			if(selected_methods=="powerlawFittedRPM"){
 
-				RPMsTable<-data.frame(chromosome=space(count.data),start=start(count.data),end=end(count.data))
+				RPMsTable<-data.frame(chromosome=seqnames(count.data),start=start(count.data),end=end(count.data))
 				for(i in 1:length(expFiles)){
+				  
 					print(paste("Calculating RPMs reads in...",expFiles[i], "....file in the experiment"))
 					fileName<-gsub(".bam","",expFiles[i])
-					count.i<-count.data[,colnames(count.data)==fileName]
-					values<-count.i[[1]]
+					count.data.f<-mcols(count.data)
+					count.i<-count.data.f[,colnames(count.data.f)==fileName]
+					values<-count.i
 					coef.i<-getPowerLawFittedCoeficient(values)
 					RPMs<-data.frame(RPMs=powerLawFittedRPM(values,coef.i)) 
 					colnames(RPMs)[1]<-fileName
 					RPMsTable<-cbind(RPMsTable,RPMs)
 				}	
 				for(i in 1:length(contrFiles)){
+				  
 					print(paste("Calculating RPMs reads in...",contrFiles[i], "....file in the control"))
 					fileName<-gsub(".bam","",contrFiles[i])
-					count.i<-count.data[,colnames(count.data)==fileName]
-					values<-count.i[[1]]
+					count.data.f<-mcols(count.data)
+					count.i<-count.data.f[,colnames(count.data.f)==fileName]
+					values<-count.i
 					coef.i<-getPowerLawFittedCoeficient(values)
 					RPMs<-data.frame(RPMs=powerLawFittedRPM(values,coef.i)) 
 					colnames(RPMs)[1]<-fileName
@@ -391,20 +418,24 @@ setMethod("calculateBatchRPM",
 				}
 				####################################
 				n<-ncol(RPMsTable)
-				RPMsTable.RangedData<-RangedData(space=RPMsTable$chromosome,IRanges(start=RPMsTable$start,end=RPMsTable$end),RPMsTable[,4:n])
-				RPMsTable(object)<-RPMsTable.RangedData
+				RPMsTable.GRanges<-GRanges(seqnames=RPMsTable$chromosome,
+				                           IRanges(start=RPMsTable$start,end=RPMsTable$end))
+				
+				values(RPMsTable.GRanges)<-RPMsTable[,4:n]
+				RPMsTable(object)<-RPMsTable.GRanges
 				assign(objName,object,envir=parent.frame())
 				invisible(1)
 				print("The RPMs table is created!!!.")		
 				
 			}
 			if(selected_methods=="normalRPM"){
-				RPMsTable<-data.frame(chromosome=space(count.data),start=start(count.data),end=end(count.data))
+				RPMsTable<-data.frame(chromosome=seqnames(count.data),start=start(count.data),end=end(count.data))
 				for(i in 1:length(expFiles)){
 					print(paste("Calculating RPMs reads in...",expFiles[i], "....file in the experiment"))
 					fileName<-gsub(".bam","",expFiles[i])
-					count.i<-count.data[,colnames(count.data)==fileName]
-					values<-count.i[[1]]
+					count.data.f<-mcols(count.data)
+					count.i<-count.data.f[,colnames(count.data.f)==fileName]
+					values<-count.i
 					RPMs<-data.frame(RPMs=normalcalRPM(values,expLibs[i])) 
 					colnames(RPMs)[1]<-fileName
 					RPMsTable<-cbind(RPMsTable,RPMs)
@@ -412,16 +443,18 @@ setMethod("calculateBatchRPM",
 				for(i in 1:length(contrFiles)){
 					print(paste("Calculating RPMs reads in...",contrFiles[i], "....file in the control"))
 					fileName<-gsub(".bam","",contrFiles[i])
-					count.i<-count.data[,colnames(count.data)==fileName]
-					values<-count.i[[1]]
+					count.data.f<-mcols(count.data)
+					count.i<-count.data.f[,colnames(count.data.f)==fileName]
+					values<-count.i
 					RPMs<-data.frame(RPMs=normalcalRPM(values,contrLibs[i]))
 					colnames(RPMs)[1]<-fileName
 					RPMsTable<-cbind(RPMsTable,RPMs)
 				}
 				####################################
 				n<-ncol(RPMsTable)
-				RPMsTable.RangedData<-RangedData(space=RPMsTable$chromosome,IRanges(start=RPMsTable$start,end=RPMsTable$end),RPMsTable[,4:n])
-				RPMsTable(object)<-RPMsTable.RangedData
+				RPMsTable.GRanges<-GRanges(seqnames=RPMsTable$chromosome,IRanges(start=RPMsTable$start,end=RPMsTable$end))
+				values(RPMsTable.GRanges)<-RPMsTable[,4:n]
+				RPMsTable(object)<-RPMsTable.GRanges
 				assign(objName,object,envir=parent.frame())
 				invisible(1)
 				print("The RPMs table is created!!!.")		
@@ -456,53 +489,88 @@ setMethod("getBatchInteractions",
 			contrFiles<-BamContrFiles(object)
 			##########get read count##################
 			count.data<-readCountTable(object)
-			if(nrow(count.data)==0){
+			if(length(count.data)==0){
 				stop("No reads found in the countTable object, please run getBatchReadCountPerRestrictionFragment or getBatchReadCountPerWindow function!!")
 			}
 			##########get RPM##################
 			rpm.data<-RPMsTable(object)
-			if(nrow(rpm.data)==0){
+			if(length(rpm.data)==0){
 				stop("No RPMs found, please run calculateBatchRPM function!!")
 			}
 			#############get interaction in experiments###########
-			expInteraction<-data.frame(chromosome=space(rpm.data),start=start(rpm.data),end=end(rpm.data))
+			expInteraction<-data.frame(chromosome=seqnames(rpm.data),start=start(rpm.data),end=end(rpm.data))
 			for(i in 1:length(expFiles)){
+			
 				print(paste("Analyzing interaction regions ...",expFiles[i], ".... in the experiment"))
 				fileName<-gsub(".bam","",expFiles[i])
-				count.i<-count.data[,colnames(count.data)==fileName]
-				rpm.i<-rpm.data[,colnames(rpm.data)==fileName]
-				colnames(count.i)<-"nReads"
-				colnames(rpm.i)<-"RPMs"
-				count.i$RPMs<-rpm.i$RPMs
+				count.data.f<-mcols(count.data)
+				count.i<-count.data.f[,colnames(count.data.f)==fileName]
+				
+				rpm.data.f<-mcols(rpm.data)
+				rpm.i<-rpm.data.f[,colnames(rpm.data.f)==fileName]
+				
+				count.i<-GRanges(seqnames = seqnames(count.data),IRanges(start=start(count.data),
+				                                                               end=end(count.data)),nReads=count.i,RPMs=rpm.i)
+				
 				count.i<-count.i[count.i$RPMs>1,]
 				expInt.i<-assign3CseqSigContact(object,count.i,smoothing.parameter,fdr)	
 				
-				expInt.i.frame<-data.frame(chromosome=space(expInt.i),start=start(expInt.i),end=end(expInt.i),nReads=expInt.i$nReads,RPMs=expInt.i$RPMs,p.value=expInt.i$p.value,q.value=expInt.i$q.value)
+				expInt.i.frame<-data.frame(chromosome=seqnames(expInt.i),
+				                           start=start(expInt.i),
+				                           end=end(expInt.i),
+				                           nReads=expInt.i$nReads,
+				                           RPMs=expInt.i$RPMs,
+				                           p.value=expInt.i$p.value,
+				                           q.value=expInt.i$q.value)
 				
 				expInteraction<-merge(expInteraction,expInt.i.frame,by.x=c("chromosome","start","end"),by.y=c("chromosome","start","end"),all=T)
-				expInt.i.frame<-data.frame(chromosome=space(expInt.i),start=start(expInt.i),end=end(expInt.i),nReads=expInt.i$nReads,RPMs=expInt.i$RPMs,p.value=expInt.i$p.value,q.value=expInt.i$q.value)
+				expInt.i.frame<-data.frame(chromosome=seqnames(expInt.i),
+				                           start=start(expInt.i),
+				                           end=end(expInt.i),
+				                           nReads=expInt.i$nReads,
+				                           RPMs=expInt.i$RPMs,
+				                           p.value=expInt.i$p.value,
+				                           q.value=expInt.i$q.value)
 				write.table(expInt.i.frame,file=paste(fileName,".interaction.txt",sep=""),append=FALSE, sep="\t", quote=FALSE,row.names=FALSE, col.names=TRUE)					
 				
 			}
 			n.col<-ncol(expInteraction)
 			expInteraction.filtered<-expInteraction[rowSums(is.na(expInteraction[,4:n.col])) !=n.col-3,]
 			#############get interaction in controls###############
-			contrInteraction<-data.frame(chromosome=space(rpm.data),start=start(rpm.data),end=end(rpm.data))
+			contrInteraction<-data.frame(chromosome=seqnames(rpm.data),start=start(rpm.data),end=end(rpm.data))
+			
 			for(i in 1:length(contrFiles)){
 				print(paste("Analyzing interaction regions ...",contrFiles[i], ".... in the control"))
 				fileName<-gsub(".bam","",contrFiles[i])
-				count.i<-count.data[,colnames(count.data)==fileName]
-				rpm.i<-rpm.data[,colnames(rpm.data)==fileName]
-				colnames(count.i)<-"nReads"
-				colnames(rpm.i)<-"RPMs"
-				count.i$RPMs<-rpm.i$RPMs
+				count.data.f<-mcols(count.data)
+				
+				count.i<-count.data.f[,colnames(count.data.f)==fileName]
+				
+				rpm.data.f<-mcols(rpm.data)
+				rpm.i<-rpm.data.f[,colnames(rpm.data.f)==fileName]
+				
+
+				count.i<-GRanges(seqnames = seqnames(count.data),IRanges(start=start(count.data),
+				                                                         end=end(count.data)),nReads=count.i,RPMs=rpm.i)
 				count.i<-count.i[count.i$RPMs>1,]
 				contrInt.i<-assign3CseqSigContact(object,count.i,smoothing.parameter,fdr)	
 				
-				contrInt.i.frame<-data.frame(chromosome=space(contrInt.i),start=start(contrInt.i),end=end(contrInt.i),nReads=contrInt.i$nReads,RPMs=contrInt.i$RPMs,p.value=contrInt.i$p.value,q.value=contrInt.i$q.value)
+				contrInt.i.frame<-data.frame(chromosome=seqnames(contrInt.i),
+				                             start=start(contrInt.i),
+				                             end=end(contrInt.i),
+				                             nReads=contrInt.i$nReads,
+				                             RPMs=contrInt.i$RPMs,
+				                             p.value=contrInt.i$p.value,
+				                             q.value=contrInt.i$q.value)
 				
 				contrInteraction<-merge(contrInteraction,contrInt.i.frame,by.x=c("chromosome","start","end"),by.y=c("chromosome","start","end"),all=T)
-				contrInt.i.frame<-data.frame(chromosome=space(contrInt.i),start=start(contrInt.i),end=end(contrInt.i),nReads=contrInt.i$nReads,RPMs=contrInt.i$RPMs,p.value=contrInt.i$p.value,q.value=contrInt.i$q.value)
+				contrInt.i.frame<-data.frame(chromosome=seqnames(contrInt.i),
+				                             start=start(contrInt.i),
+				                             end=end(contrInt.i),
+				                             nReads=contrInt.i$nReads,
+				                             RPMs=contrInt.i$RPMs,
+				                             p.value=contrInt.i$p.value,
+				                             q.value=contrInt.i$q.value)
 				write.table(contrInt.i.frame,file=paste(fileName,".interaction.txt",sep=""),append=FALSE, sep="\t", quote=FALSE,row.names=FALSE, col.names=TRUE)					
 				
 			}
@@ -520,7 +588,9 @@ setMethod("getBatchInteractions",
 				exp.pvalue[exp.pvalue == 0] <- 1e-20
 				exp.fisher.pvalue<-apply(exp.pvalue,1,fishersMethod)
 				exp.fisher.qvalue<-qvalue(exp.fisher.pvalue, fdr.level=fdr, pi0.method="bootstrap")$qvalues
-				exp.intersec.interaction<-RangedData(space=exp.intersec$chromosome,IRanges(start=exp.intersec$start,end=exp.intersec$end),nReads=exp.nReads.mean,RPMs=exp.RPMs.mean,p.value=exp.fisher.pvalue,q.value=exp.fisher.qvalue)
+				exp.intersec.interaction<-GRanges(seqnames=exp.intersec$chromosome,
+				                                  IRanges(start=exp.intersec$start,end=exp.intersec$end),
+				                                  nReads=exp.nReads.mean,RPMs=exp.RPMs.mean,p.value=exp.fisher.pvalue,q.value=exp.fisher.qvalue)
 				##############################################
 				contr.intersec<-na.omit(contrInteraction.filtered)
 				contr.readCounts<-contr.intersec[,c(seq(from=4,to=n.col,by=4))]
@@ -531,7 +601,10 @@ setMethod("getBatchInteractions",
 				contr.pvalue[contr.pvalue == 0] <- 1e-20
 				contr.fisher.pvalue<-apply(contr.pvalue,1,fishersMethod)
 				contr.fisher.qvalue<-qvalue(contr.fisher.pvalue, fdr.level=fdr, pi0.method="bootstrap")$qvalues
-				contr.intersec.interaction<-RangedData(space=contr.intersec$chromosome,IRanges(start=contr.intersec$start,end=contr.intersec$end),nReads=contr.nReads.mean,RPMs=contr.RPMs.mean,p.value=contr.fisher.pvalue,q.value=contr.fisher.qvalue)
+				contr.intersec.interaction<-GRanges(seqnames=contr.intersec$chromosome,
+				                                    IRanges(start=contr.intersec$start,end=contr.intersec$end),
+				                                    nReads=contr.nReads.mean,RPMs=contr.RPMs.mean,
+				                                    p.value=contr.fisher.pvalue,q.value=contr.fisher.qvalue)
 				##############################################
 				expInteractionRegions(object)<-exp.intersec.interaction	
 				contrInteractionRegions(object)<-contr.intersec.interaction	
@@ -555,7 +628,10 @@ setMethod("getBatchInteractions",
 				exp.fisher.pvalue<-apply(exp.pvalue,1,fishersMethod)
 				exp.fisher.qvalue<-qvalue(exp.fisher.pvalue, fdr.level=fdr, pi0.method="bootstrap")$qvalues
 				
-				exp.union.interaction<-RangedData(space=exp.union$chromosome,IRanges(start=exp.union$start,end=exp.union$end),nReads=exp.nReads.mean,RPMs=exp.RPMs.mean,p.value=exp.fisher.pvalue,q.value=exp.fisher.qvalue)
+				exp.union.interaction<-GRanges(seqnames=exp.union$chromosome,
+				                               IRanges(start=exp.union$start,end=exp.union$end),
+				                               nReads=exp.nReads.mean,RPMs=exp.RPMs.mean,
+				                               p.value=exp.fisher.pvalue,q.value=exp.fisher.qvalue)
 				##############################################
 				contr.union<-contrInteraction.filtered
 				contr.readCounts<-contr.union[,c(seq(from=4,to=n.col,by=4))]
@@ -570,7 +646,10 @@ setMethod("getBatchInteractions",
 				contr.pvalue[contr.pvalue == 0] <- 1e-20
 				contr.fisher.pvalue<-apply(contr.pvalue,1,fishersMethod)
 				contr.fisher.qvalue<-qvalue(contr.fisher.pvalue, fdr.level=fdr, pi0.method="bootstrap")$qvalues
-				contr.union.interaction<-RangedData(space=contr.union$chromosome,IRanges(start=contr.union$start,end=contr.union$end),nReads=contr.nReads.mean,RPMs=contr.RPMs.mean,p.value=contr.fisher.pvalue,q.value=contr.fisher.qvalue)
+				contr.union.interaction<-GRanges(seqnames=contr.union$chromosome,
+				                                 IRanges(start=contr.union$start,end=contr.union$end),
+				                                 nReads=contr.nReads.mean,RPMs=contr.RPMs.mean,
+				                                 p.value=contr.fisher.pvalue,q.value=contr.fisher.qvalue)
 				##############################################
 				expInteractionRegions(object)<-exp.union.interaction	
 				contrInteractionRegions(object)<-contr.union.interaction	

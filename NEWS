@@ -1,3 +1,5 @@
+Version 1.29.0: (2018-12-08)
+- migrated all codes to support the BioC3.9! This is because the BioC3.9 will not anymore support the 'RangedData' which is mainly used by r3Cseq in the previous versions.
 
 version 1.13.1: (2015-01-26)
 - fixed the bugs in function "export3Cseq2bedGraph"

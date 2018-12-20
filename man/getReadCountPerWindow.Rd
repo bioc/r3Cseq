@@ -8,7 +8,7 @@
 }
 
 \usage{
-getReadCountPerWindow(object,windowSize=5e3,nFragmentExcludedReadsNearViewpoint=2,mode=c("non-overlapping", "overlapping"))
+getReadCountPerWindow(object,windowSize=5e3,nFragmentExcludedReadsNearViewpoint=2,mode=c("non-overlapping"))
 }
 
 

@@ -3,7 +3,7 @@ import(methods)
 importMethodsFrom(Biostrings, reverseComplement, matchPattern,
 	DNAString)
 
-importMethodsFrom(GenomeInfoDb, seqlengths, "seqlengths<-",
+importMethodsFrom(Seqinfo, seqlengths, "seqlengths<-",
 	"seqlevels<-")
 
 importFrom(RColorBrewer, brewer.pal)

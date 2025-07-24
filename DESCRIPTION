@@ -1,5 +1,5 @@
 Package: r3Cseq
-Version: 1.55.0
+Version: 1.55.1
 Title: Analysis of Chromosome Conformation Capture and Next-generation
         Sequencing (3C-seq)
 Author: Supat Thongjuea, MRC WIMM Centre for Computational Biology, Weatherall
@@ -7,7 +7,7 @@ Author: Supat Thongjuea, MRC WIMM Centre for Computational Biology, Weatherall
         <supat.thongjuea@imm.ox.ac.uk>
 Maintainer: Supat Thongjuea <supat.thongjuea@imm.ox.ac.uk> or <supat.thongjuea@gmail.com>
 Depends: GenomicRanges, Rsamtools, rtracklayer, VGAM, qvalue
-Imports: methods, GenomeInfoDb, IRanges, Biostrings, data.table,
+Imports: methods, Seqinfo, IRanges, Biostrings, data.table,
 	sqldf, RColorBrewer
 Suggests: BSgenome.Mmusculus.UCSC.mm9.masked, BSgenome.Mmusculus.UCSC.mm10.masked, BSgenome.Hsapiens.UCSC.hg18.masked,
 	BSgenome.Hsapiens.UCSC.hg19.masked, BSgenome.Rnorvegicus.UCSC.rn5.masked
